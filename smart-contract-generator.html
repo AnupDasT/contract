@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Smart Contract Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 15px;
+      border: 1px solid #ddd;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Custom Smart Contract Generator</h1>
+  <div>
+    <div class="form-group">
+      <label for="contractType">Select Contract Type:</label>
+      <select id="contractType">
+        <option value="erc20">ERC20 Token</option>
+      </select>
+    </div>
+    <div class="form-group" id="erc20Fields">
+      <label for="tokenName">Token Name:</label>
+      <input type="text" id="tokenName" placeholder="e.g., MyToken">
+
+      <label for="tokenSymbol">Token Symbol:</label>
+      <input type="text" id="tokenSymbol" placeholder="e.g., MTK">
+
+      <label for="initialSupply">Initial Supply:</label>
+      <input type="number" id="initialSupply" placeholder="e.g., 1000000">
+    </div>
+
+    <button onclick="generateCode()">Generate Contract Code</button>
+
+    <h2>Generated Smart Contract:</h2>
+    <pre id="output"></pre>
+  </div>
+
+  <script>
+    function generateCode() {
+      const contractType = document.getElementById("contractType").value;
+      const output = document.getElementById("output");
+      let code = "";
+
+      if (contractType === "erc20") {
+        const tokenName = document.getElementById("tokenName").value.trim();
+        const tokenSymbol = document.getElementById("tokenSymbol").value.trim();
+        const initialSupply = document.getElementById("initialSupply").value.trim();
+
+        // Validate inputs
+        if (!tokenName || !tokenSymbol || !initialSupply || isNaN(initialSupply) || initialSupply <= 0) {
+          output.textContent = "Error: Please provide valid inputs for Token Name, Symbol, and Initial Supply.";
+          return;
+        }
+
+        // Solidity Code for ERC20 Token with SPDX License Identifier and deploy function
+        code = `// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+/**
+   * @title ${tokenName}
+   * @dev Auto-generated ERC20 Token Contract
+   * @custom:dev-run-script scripts/deploy_with_ethers.ts
+   */
+contract ${sanitizeContractName(tokenName)} is ERC20 {
+    constructor() ERC20("${tokenName}", "${tokenSymbol}") { }
+
+    function deploy() public returns (bool) {
+        _mint(msg.sender, ${initialSupply} * 10 ** uint256(decimals()));
+        return true;
+    }
+}`;
+      }
+
+      output.textContent = code;
+    }
+
+    // Helper function to sanitize contract names
+    function sanitizeContractName(name) {
+      // Remove invalid characters and ensure the name starts with a letter or underscore
+      return name.replace(/[^a-zA-Z0-9_]/g, "").replace(/^[0-9]/, "_$&");
+    }
+  </script>
+</body>
+</html>
